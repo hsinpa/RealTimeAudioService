@@ -17,6 +17,8 @@ UserSettings/
 *.booproj
 *.vscode
 
+node_modules/
+
 # Unity3D generated meta files
 *.pidb.meta
 

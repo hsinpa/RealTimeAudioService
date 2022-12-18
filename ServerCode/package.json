@@ -1,0 +1,26 @@
+{
+  "name": "rt_audio_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prod": ".\\node_modules\\.bin\\pm2 start .\\dist\\index.js --name 'PuffServer' --log-date-format 'YYYY-MM-DD HH:mm'",
+    "prod_restart": ".\\node_modules\\.bin\\pm2 restart 'PuffServer' --log-date-format 'YYYY-MM-DD HH:mm'",
+    "dev": ".\\node_modules\\.bin\\nodemon --use_strict .\\dist\\index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.10.2",
+    "nodemon": "^2.0.20",
+    "ws": "^8.11.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.3",
+    "@types/node": "^18.11.17"
+  }
+}
