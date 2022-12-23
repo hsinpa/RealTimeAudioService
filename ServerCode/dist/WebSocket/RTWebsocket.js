@@ -18,6 +18,10 @@ class RTWebsocket {
             ws.on('message', function message(data, isBinary) {
                 console.log('received: %s', data);
                 if (isBinary) {
+                    self.BroadcastAudioData(data, ws.id);
+                }
+                else {
+                    let json_data = JSON.parse(data.toString());
                 }
             });
             ws.on('close', function message(data) {
