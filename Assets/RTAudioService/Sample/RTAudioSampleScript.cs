@@ -14,18 +14,28 @@ namespace Hsinpa.RTAudioService
         private AudioSource _simulateSelfAudioSource;
 
         private RTAudioProcessor m_RTAudioProcessor;
+        private RTAudioData m_RTAudioData;
+        private RTAudioSocket m_RTAudioSocket;
 
-        void Start()
+        async void Start()
         {
-            _simulateSelfAudioSource.clip = AudioClip.Create("MySinusoid", RTAudioUIThread.STREAMING_SAMPLE * 2, 1, RTAudioUIThread.STREAMING_SAMPLE, true, OnAudioRead, OnAudioSetPosition);
+            m_RTAudioSocket = new RTAudioSocket();
+            m_RTAudioSocket.Connect("ws://localhost:8080");
+
+            m_RTAudioSocket.OnStringMessage += OnSocketMessage;
+            m_RTAudioSocket.OnBinaryMessage += OnSocketBinary;
+
+            m_RTAudioData = new RTAudioData(RTAudioUIThread.FREQUENCY, 2);
+
+            _simulateSelfAudioSource.clip = AudioClip.Create("MySinusoid", RTAudioUIThread.FREQUENCY * 2, 1, RTAudioUIThread.FREQUENCY, true, OnAudioRead, OnAudioSetPosition);
             _simulateSelfAudioSource.loop = true;
-            _simulateSelfAudioSource.Play();
 
             m_RTAudioProcessor = new RTAudioProcessor();
             m_RTAudioProcessor.SetAudioClip(_simulateSelfAudioSource.clip);
 
-            rtAudioUIThread.OnAudioDataReceived += this.OnAudioDataRead;
             var devices = rtAudioUIThread.GetDevices();
+            rtAudioUIThread.OnAudioDataReceived += OnMicAudioReceive;
+
 
             foreach (string d in devices) {
                 Debug.Log(d);
@@ -33,34 +43,17 @@ namespace Hsinpa.RTAudioService
 
             if (devices.Length > 0)
                 rtAudioUIThread.PlayDevice(devices[0]);
+
+            await System.Threading.Tasks.Task.Delay(500);
+            _simulateSelfAudioSource.Play();
         }
-
-        private void OnAudioDataRead(float[] sample_rates) {
-            int lens = sample_rates.Length;
-            int mic_position = Mathf.RoundToInt(sample_rates[0]);
-
-            if (lens > 1)
-                sample_rates[0] = sample_rates[1];
-
-            //bool is_audio_updated = m_RTAudioProcessor.AppendData(sample_rates, mic_position);
-
-            //if (is_audio_updated)
-            //    Debug.Log($"OnAudioDataRead MicPos { mic_position }");
-
-
-            //_simulateSelfAudioSource.clip.SetData(sample_rates);
-
-            //for (int i = 0; i < lens; i += step) {
-            //    Debug.Log("OnAudioData " + sample_rates[i]);
-            //}
-
-        }
-
 
         void OnAudioRead(float[] data)
         {
             int count = 0;
-            Debug.Log("OnAudioRead " + data.Length);
+            //Debug.Log("OnAudioRead " + data.Length);
+
+            m_RTAudioData.GrabData(ref data);
         }
 
         void OnAudioSetPosition(int newPosition)
@@ -68,5 +61,26 @@ namespace Hsinpa.RTAudioService
             //position = newPosition;
         }
 
+        void OnMicAudioReceive(float[] mic_audio) {
+            //Debug.Log("OnMicAudioReceive " + mic_audio.Length);
+            m_RTAudioData.AppendData(mic_audio);
+        }
+
+        void OnSocketMessage(string event_id, string json_string) { 
+            
+        }
+
+        void OnSocketBinary(byte[] binary_data)
+        {
+
+        }
+
+        private void OnDestroy()
+        {
+            if (m_RTAudioSocket != null) {
+                m_RTAudioSocket.OnStringMessage -= OnSocketMessage;
+                m_RTAudioSocket.OnBinaryMessage -= OnSocketBinary;
+            }
+        }
     }
 }

@@ -10,25 +10,22 @@ namespace Hsinpa.RTAudioService {
         [SerializeField]
         private AudioSource microAudioSource;
 
-        int m_frequency = 44100; //Default => 44100 * 0.25, cause i only care about speed
-        public int frequency => this.m_frequency;
+
+        public const int FREQUENCY = 11025; //Default => 44100 * 0.25, cause i only care about speed
 
         private bool m_is_playing = false;
 
-        public const int STREAMING_SAMPLE = 1024;
+        private const int STREAMING_SAMPLE = 2205;
         private float[] m_sample_rates = new float[STREAMING_SAMPLE];
 
-        private const int m_second_length  = 1;
-        private int m_record_time;
+        private const float m_second_length  = 0.2f;
+        private float m_record_time;
         private string m_device_name;
 
         public System.Action<float[]> OnAudioDataReceived;
         #endregion
 
         #region Public API
-        public void SetFrequency(int frequency) {
-            m_frequency = frequency;
-        }
 
         public string[] GetDevices() {
             return Microphone.devices;
@@ -38,9 +35,11 @@ namespace Hsinpa.RTAudioService {
             this.m_device_name = device_name;
             if (microAudioSource == null) return;
 
-            microAudioSource.clip = Microphone.Start(device_name, true, m_second_length, m_frequency);
+            microAudioSource.clip = Microphone.Start(device_name, true, 2, FREQUENCY);
             microAudioSource.loop = true;
             microAudioSource.Play();
+
+            Debug.Log("Mic clip samples " + microAudioSource.clip.samples);
 
             //m_sample_rates = new float[m_frequency * microAudioSource.clip.channels];
 
@@ -56,27 +55,25 @@ namespace Hsinpa.RTAudioService {
         #endregion
 
         #region Monobehavior
-        private void Update()
+        private void FixedUpdate()
         {
             if (this.gameObject == null || microAudioSource == null || microAudioSource.clip == null || !m_is_playing) return;
 
-            //if (m_record_time < Time.time) {
+            if (m_record_time <= Time.time) {
 
                 //Debug.Log(Microphone.GetPosition(this.m_device_name));
 
-                int micPosition = Microphone.GetPosition(this.m_device_name) - (STREAMING_SAMPLE + 1); // null means the first microphone
+                int micPosition = Microphone.GetPosition(this.m_device_name) - STREAMING_SAMPLE; // null means the first microphone
 
                 if (micPosition < 0) return;
 
                 microAudioSource.clip.GetData(m_sample_rates, micPosition);
 
-                m_sample_rates[0] = micPosition; 
-
                 if (OnAudioDataReceived != null)
                     OnAudioDataReceived(this.m_sample_rates);
 
-                m_record_time += m_second_length;
-           // }
+                m_record_time = m_second_length + Time.time;
+            }
         }
         #endregion
 

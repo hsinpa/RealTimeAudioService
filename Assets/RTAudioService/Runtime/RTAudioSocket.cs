@@ -10,22 +10,11 @@ namespace Hsinpa.RTAudioService
     {
         WebSocket m_websocket;
 
-        System.Action<byte[]> OnBinaryMessage;
-        System.Action<string, string> OnStringMessage;
+        public System.Action<byte[]> OnBinaryMessage;
+        public System.Action<string, string> OnStringMessage;
 
         public RTAudioSocket() {
-            //this.m_url = url;
 
-            //(var ws = new WebSocket(url))
-            //{
-            //    ws.OnMessage += (sender, e) =>
-            //    {
-            //        Debug.Log("Laputa says: " + e.Data);
-            //    };
-
-            //    ws.Connect();
-            //    ws.Send("BALUS");
-            //}
         }
 
         public void Connect(string url) {
@@ -39,7 +28,7 @@ namespace Hsinpa.RTAudioService
                 this.m_websocket.Send(json_string);
         }
 
-        public void OnMessage(object sender, MessageEventArgs args) {
+        private void OnMessage(object sender, MessageEventArgs args) {
 
             if (args.IsBinary && OnBinaryMessage != null) {
                 OnBinaryMessage( args.RawData );
