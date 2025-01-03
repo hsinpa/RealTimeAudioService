@@ -28,9 +28,10 @@ export default class RTWebsocket {
 
                 //Send Audio
                 if (isBinary) {
-                    
+                    self.BroadcastAudioData(data, ws.id);
+                } else {
+                    let json_data =JSON.parse(data.toString());
                 }
-
             });
 
             ws.on('close', function message(data) {
